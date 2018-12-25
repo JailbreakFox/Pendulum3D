@@ -1,0 +1,273 @@
+<?xml version="1.0"?>
+<robot name="pendulum_3d" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Constants for robot dimensions -->
+  <xacro:property name="PI" value="3.1415926535897931"/>
+  <xacro:property name="mass" value="10" /> <!-- arbitrary value for mass -->
+  <xacro:property name="width" value="0.1" /> <!-- Square dimensions (widthxwidth) of beams -->
+  <xacro:property name="width_2" value="0.02" />
+  <xacro:property name="height1" value="4" /> <!-- Link 1 -->
+  <xacro:property name="height2" value="1.5" /> <!-- Link 2 -->
+  <xacro:property name="height3" value="1" /> <!-- Link 3 -->
+
+  <!-- ros_control plugin -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/pendulum_3d</robotNamespace>
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+    </plugin>
+  </gazebo>
+
+  <!-- Link1 -->
+  <gazebo reference="base_link">
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <!-- Link2 -->
+  <gazebo reference="middle_link">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <!-- Link3 -->
+  <gazebo reference="top_link">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <!-- Import Rviz colors -->
+  <!--xacro:include filename="$(find myurdf)/robot/materials.xacro" /-->
+
+  <!-- Used for fixing robot to Gazebo 'base_link' -->
+  <link name="world"/>
+  <joint name="fixed" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+
+  <!-- Base Link -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="2 2 0.1"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.05"/>
+    <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="2 2 0.1"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.05"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+              ixx="${mass / 12.0 * (width*width + height1*height1)}" ixy="0.0" ixz="0.0"
+              iyy="${mass / 12.0 * (height1*height1 + width*width)}" iyz="0.0"
+              izz="${mass / 12.0 * (width*width + width*width)}"/>
+    </inertial>
+  </link>
+
+  <joint name="control_x" type="prismatic">
+    <parent link="world"/>
+    <child link="prismatic_x"/>
+    <limit effort="1000.0" lower="-5" upper="5" velocity="5"/>
+    <origin rpy="0 0 0" xyz="0 0 ${height1/2}"/>
+    <dynamatic damping="0.0" friction="0.0"/>
+    <axis xyz="1 0 0"/>
+  </joint>
+
+  <link name="prismatic_x">
+    <visual>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+          ixx="${mass / 12.0 * (width*width + width*width)}" ixy="0.0" ixz="0.0"
+          iyy="${mass / 12.0 * (width*width + width*width)}" iyz="0.0"
+          izz="${mass / 12.0 * (width*width + width*width)}"/>
+    </inertial>
+  </link>
+
+  <joint name="control_y" type="prismatic">
+    <parent link="prismatic_x"/>
+    <child link="prismatic_y"/>
+    <limit effort="1000.0" lower="-5" upper="5" velocity="5"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <dynamatic damping="0.0" friction="0.0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="prismatic_y">
+    <visual>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+          ixx="${mass / 12.0 * (width*width + width*width)}" ixy="0.0" ixz="0.0"
+          iyy="${mass / 12.0 * (width*width + width*width)}" iyz="0.0"
+          izz="${mass / 12.0 * (width*width + width*width)}"/>
+    </inertial>
+  </link>
+
+  <joint name="joint" type="continuous">
+    <parent link="prismatic_y"/>
+    <child link="hinge_1"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="hinge_1">
+    <visual>
+      <geometry>
+        <sphere radius="${width/2}"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="${width/2}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${mass/10}"/>
+      <inertia
+          ixx="${mass / 12.0 * (width*width + width*width)}" ixy="0.0" ixz="0.0"
+          iyy="${mass / 12.0 * (width*width + width*width)}" iyz="0.0"
+          izz="${mass / 12.0 * (width*width + width*width)}"/>
+    </inertial>
+  </link>
+
+  <joint name="joint1" type="continuous">
+    <parent link="hinge_1"/>
+    <child link="hinge_2"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="hinge_2">
+    <visual>
+      <geometry>
+        <sphere radius="${width/2}"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="${width/2}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${mass/10}"/>
+      <inertia
+          ixx="${mass / 12.0 * (width*width + width*width)}" ixy="0.0" ixz="0.0"
+          iyy="${mass / 12.0 * (width*width + width*width)}" iyz="0.0"
+          izz="${mass / 12.0 * (width*width + width*width)}"/>
+    </inertial>
+  </link>
+
+  <joint name="joint2" type="continuous">
+    <parent link="hinge_2"/>
+    <child link="middle_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="1 0 0"/>
+  </joint>
+
+  <link name="middle_link">
+    <visual>
+      <geometry>
+        <cylinder length="${height2}" radius="${width_2}"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 ${-height2/2}"/>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="${height2}" radius="${width_2+0.1}"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 ${-height2/2}"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 ${-height2/2}" rpy="0 0 0"/>
+      <mass value="${mass/10}"/>
+      <inertia
+            ixx="${mass / 12.0 * (width*width + width*width)}" ixy="0.0" ixz="0.0"
+            iyy="${mass / 12.0 * (height2*height2 + width*width)}" iyz="0.0"
+            izz="${mass / 12.0 * (width*width + height2*height2)}"/>
+    </inertial>
+  </link>
+
+  <joint name="end" type="fixed">
+    <parent link="middle_link"/>
+    <child link="end_link"/>
+    <origin rpy="0 0 0" xyz="0 0 ${-height2}"/>
+  </joint>
+
+  <link name="end_link">
+    <visual>
+      <geometry>
+        <sphere radius="${width}"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="${width+0.05}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${mass*10}"/>
+      <inertia
+          ixx="${mass / 12.0 * (width*width + width*width)}" ixy="0.0" ixz="0.0"
+          iyy="${mass / 12.0 * (width*width + width*width)}" iyz="0.0"
+          izz="${mass / 12.0 * (width*width + width*width)}"/>
+    </inertial>
+  </link>
+
+  <transmission name="tran1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="control_x">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor1">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="tran1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="control_y">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor1">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+</robot>
