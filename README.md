@@ -1,0 +1,2 @@
+# Pendulum3D
+使用ROS与Gazebo实现3D刚体杆防晃效果
